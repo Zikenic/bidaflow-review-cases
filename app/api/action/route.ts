@@ -50,6 +50,7 @@ export async function POST(request: Request) {
 
     switch (body.action) {
       case "profile.update": {
+        const unusedTransactionCode = code("TX");
         const fullName = required(payload, "fullName", "Họ tên");
         const phone = optional(payload, "phone");
         await db.prepare("UPDATE users SET full_name=?, phone=?, updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(fullName, phone, user.id).run();
