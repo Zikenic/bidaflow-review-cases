@@ -381,26 +381,28 @@ export async function POST(request: Request) {
       }
       case "order.item.status": {
         requireAny(user, ["ORDERS_MANAGE"]);
-        const itemId = required(payload, "itemId", "Món");
+        const itemIds: string[] = Array.isArray(payload.itemIds) ? (payload.itemIds as unknown[]).map(String) : [required(payload, "itemId", "Món")];
         const status = required(payload, "status", "Trạng thái");
         if (!new Set(["PENDING", "PREPARING", "SERVED", "CANCELLED"]).has(status)) throw new AppError("Trạng thái món không hợp lệ.");
-        const item = await queryOne<{ status: string; product_id: string; quantity: number; product_name: string }>("SELECT status, product_id, quantity, product_name FROM order_items WHERE id=?", itemId);
-        if (!item) throw new AppError("Không tìm thấy món.");
-        if (item.status === "SERVED" && status !== "SERVED") throw new AppError("Món đã phục vụ không thể quay lại trạng thái trước.");
-        if (status === "SERVED" && item.status !== "SERVED") {
-          const product = await queryOne<{ stock_quantity: number; track_stock: number }>("SELECT stock_quantity, track_stock FROM products WHERE id=?", item.product_id);
-          if (product?.track_stock && product.stock_quantity < item.quantity) throw new AppError("Tồn kho không đủ để hoàn tất món.");
-          if (product?.track_stock) {
-            const after = product.stock_quantity - item.quantity;
-            await db.batch([
-              db.prepare("UPDATE products SET stock_quantity=?, updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(after, item.product_id),
-              db.prepare("INSERT INTO inventory_transactions (id, code, product_id, type, quantity, before_quantity, after_quantity, reference_type, reference_id, reason, created_by) VALUES (?, ?, ?, 'SALE', ?, ?, ?, 'ORDER_ITEM', ?, ?, ?)")
-                .bind(id("stock"), code("XK"), item.product_id, item.quantity, product.stock_quantity, after, itemId, `Phục vụ ${item.product_name}`, user.id),
-            ]);
+        for (const itemId of itemIds) {
+          const item = await queryOne<{ status: string; product_id: string; quantity: number; product_name: string }>("SELECT status, product_id, quantity, product_name FROM order_items WHERE id=?", itemId);
+          if (!item) throw new AppError("Không tìm thấy món.");
+          if (item.status === "SERVED" && status !== "SERVED") throw new AppError("Món đã phục vụ không thể quay lại trạng thái trước.");
+          if (status === "SERVED" && item.status !== "SERVED") {
+            const product = await queryOne<{ stock_quantity: number; track_stock: number }>("SELECT stock_quantity, track_stock FROM products WHERE id=?", item.product_id);
+            if (product?.track_stock && product.stock_quantity < item.quantity) throw new AppError("Tồn kho không đủ để hoàn tất món.");
+            if (product?.track_stock) {
+              const after = product.stock_quantity - item.quantity;
+              await db.batch([
+                db.prepare("UPDATE products SET stock_quantity=?, updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(after, item.product_id),
+                db.prepare("INSERT INTO inventory_transactions (id, code, product_id, type, quantity, before_quantity, after_quantity, reference_type, reference_id, reason, created_by) VALUES (?, ?, ?, 'SALE', ?, ?, ?, 'ORDER_ITEM', ?, ?, ?)")
+                  .bind(id("stock"), code("XK"), item.product_id, item.quantity, product.stock_quantity, after, itemId, `Phục vụ ${item.product_name}`, user.id),
+              ]);
+            }
           }
+          await db.prepare("UPDATE order_items SET status=? WHERE id=?").bind(status, itemId).run();
+          await audit(request, user.id, "ORDER_ITEM_STATUS_CHANGED", "ORDER_ITEM", itemId, `Cập nhật món thành ${status}`);
         }
-        await db.prepare("UPDATE order_items SET status=? WHERE id=?").bind(status, itemId).run();
-        await audit(request, user.id, "ORDER_ITEM_STATUS_CHANGED", "ORDER_ITEM", itemId, `Cập nhật món thành ${status}`);
         break;
       }
       case "customer.save": {
