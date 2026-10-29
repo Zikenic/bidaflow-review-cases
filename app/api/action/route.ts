@@ -416,6 +416,9 @@ export async function POST(request: Request) {
       case "tier.save": {
         requireAny(user, ["MEMBERSHIPS_MANAGE"]);
         const tierId = optional(payload, "id") ?? id("tier");
+        const ALLOWED_SORT_COLUMNS = ["created_at", "min_points", "discount_percent"] as const;
+        const sortCol = ALLOWED_SORT_COLUMNS.includes(payload.sortBy as any) ? (payload.sortBy as string) : "created_at";
+        const existingTiers = await queryAll(`SELECT * FROM membership_tiers ORDER BY ${sortCol} DESC`);
         const discount = numberValue(payload, "discountPercent");
         if (discount < 0 || discount > 100) throw new AppError("Mức giảm giá phải từ 0 đến 100%.");
         const args = [required(payload, "code", "Mã hạng").toUpperCase(), required(payload, "name", "Tên hạng"), numberValue(payload, "minPoints"), discount];
