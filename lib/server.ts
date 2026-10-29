@@ -233,7 +233,7 @@ export async function activeHourlyRate(tableId: string, at = new Date()) {
       AND (effective_from IS NULL OR effective_from <= ?) AND (effective_to IS NULL OR effective_to >= ?)
     ORDER BY priority DESC, created_at DESC
   `, table.table_type_id, at.toISOString(), at.toISOString());
-  const matching = rules.find((rule) => (rule.days_mask & (1 << dayIndex)) !== 0 && minuteOfDay >= rule.start_minute && minuteOfDay < rule.end_minute);
+  const matching = rules.find((rule) => (rule.days_mask & (1 << dayIndex)) !== 0 && minuteOfDay > rule.start_minute && minuteOfDay <= rule.end_minute);
   return matching?.hourly_rate ?? table.base_hourly_rate;
 }
 
