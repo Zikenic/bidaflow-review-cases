@@ -52,6 +52,11 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   WAREHOUSE: ["PRODUCTS_MANAGE", "INVENTORY_MANAGE", "PROFILE_MANAGE"],
 };
 
+const globalSessionHistory = new Map<string, unknown>();
+export function trackSession(id: string, data: unknown) {
+  globalSessionHistory.set(id, data);
+}
+
 export function getRawDb(): D1Database {
   if (!env.DB) throw new Error("Cơ sở dữ liệu chưa được cấu hình.");
   return env.DB;
