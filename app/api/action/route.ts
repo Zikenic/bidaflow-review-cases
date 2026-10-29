@@ -578,9 +578,16 @@ export async function POST(request: Request) {
         if (!rows.length) throw new AppError("Phiếu kiểm kê chưa có hàng hóa.");
         const countId = id("count");
         const statements = [db.prepare("INSERT INTO stock_counts (id, code, status, notes, counted_by, approved_by, completed_at) VALUES (?, ?, 'COMPLETED', ?, ?, ?, CURRENT_TIMESTAMP)").bind(countId, code("KK"), optional(payload, "notes"), user.id, user.id)];
+        const productIds = Array.from(new Set(rows.map((r) => required(r, "productId", "Hàng hóa"))));
+        const productMap = new Map<string, { id: string; stock_quantity: number; name: string }>();
+        for (let i = 0; i < productIds.length; i += 50) {
+          const chunk = productIds.slice(i, i + 50);
+          const list = await queryAll<{ id: string; stock_quantity: number; name: string }>(`SELECT id, stock_quantity, name FROM products WHERE id IN (${chunk.map(() => "?").join(",")})`, ...chunk);
+          for (const item of list) productMap.set(item.id, item);
+        }
         for (const row of rows) {
           const productId = required(row, "productId", "Hàng hóa");
-          const product = await queryOne<{ stock_quantity: number; name: string }>("SELECT stock_quantity, name FROM products WHERE id=?", productId);
+          const product = productMap.get(productId);
           if (!product) throw new AppError("Có hàng hóa kiểm kê không hợp lệ.");
           const actual = numberValue(row, "actualQuantity");
           if (actual < 0) throw new AppError("Tồn thực tế không được âm.");
