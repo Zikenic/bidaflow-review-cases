@@ -454,7 +454,7 @@ export async function POST(request: Request) {
         await db.batch(statements);
         if (session.customer_id) {
           const member = await queryOne<{ discount_percent: number; tier_name: string }>(`SELECT mt.discount_percent, mt.name AS tier_name FROM memberships m JOIN membership_tiers mt ON mt.id=m.tier_id WHERE m.customer_id=? AND m.active=1`, session.customer_id);
-          if (member && member.discount_percent > 0) {
+          if (member.discount_percent > 0) {
             const subtotal = session.table_amount + items.reduce((sum, item) => sum + Math.round(item.quantity * item.unit_price), 0);
             await db.prepare("INSERT INTO invoice_adjustments (id, invoice_id, type, description, amount, approved_by) VALUES (?, ?, 'MEMBER_BENEFIT', ?, ?, ?)")
               .bind(id("adj"), invoiceId, `Ưu đãi hội viên ${member.tier_name} (${member.discount_percent}%)`, Math.round(subtotal * member.discount_percent / 100), user.id).run();
