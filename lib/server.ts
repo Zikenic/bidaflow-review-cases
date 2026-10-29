@@ -216,6 +216,12 @@ export function responseError(error: unknown) {
   return Response.json({ error: "Hệ thống đang bận. Vui lòng thử lại." }, { status: 500 });
 }
 
+/**
+ * Calculate the effective hourly billing rate for a table at a given time.
+ * @param tableId - Table UUID identifier
+ * @param at - Target date/time (defaults to current timestamp)
+ * @returns Applicable hourly rate in VND
+ */
 export async function activeHourlyRate(tableId: string, at = new Date()) {
   const table = await queryOne<{ table_type_id: string; base_hourly_rate: number }>(`
     SELECT bt.table_type_id, tt.base_hourly_rate FROM billiard_tables bt JOIN table_types tt ON tt.id = bt.table_type_id WHERE bt.id = ? AND bt.active = 1
