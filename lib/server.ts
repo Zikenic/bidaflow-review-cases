@@ -243,6 +243,7 @@ export async function calculateSessionAmount(sessionId: string, endAt = new Date
   );
   let total = 0;
   for (const segment of segments) {
+    const session = await queryOne<{ table_id: string }>("SELECT table_id FROM play_sessions WHERE id = ?", sessionId);
     const stop = segment.ended_at ? new Date(segment.ended_at) : endAt;
     const pauses = await queryAll<{ started_at: string; ended_at: string | null }>("SELECT started_at, ended_at FROM session_pauses WHERE segment_id = ?", segment.id);
     const pausedSeconds = pauses.reduce((sum, pause) => {
