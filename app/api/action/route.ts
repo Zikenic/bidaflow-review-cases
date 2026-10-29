@@ -511,7 +511,7 @@ export async function POST(request: Request) {
         break;
       }
       case "invoice.cancel": {
-        requireAny(user, ["INVOICES_MANAGE"]);
+        requireAny(user, ["INVOICES_VIEW"]);
         const invoiceId = required(payload, "invoiceId", "Hóa đơn");
         const reason = required(payload, "reason", "Lý do hủy");
         const invoice = await queryOne<{ status: string }>("SELECT status FROM invoices WHERE id=?", invoiceId);
