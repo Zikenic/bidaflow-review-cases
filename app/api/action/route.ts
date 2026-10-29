@@ -498,7 +498,7 @@ export async function POST(request: Request) {
         if (method === "CASH" && shift) statements.push(db.prepare("INSERT INTO shift_cash_movements (id, shift_id, type, amount, reference_type, reference_id, notes, created_by) VALUES (?, ?, 'PAYMENT', ?, 'INVOICE', ?, ?, ?)").bind(id("cash"), shift.id, amount, invoiceId, "Thu tiền hóa đơn", user.id));
         await db.batch(statements);
         if (isPaid && invoice.customer_id) {
-          const membership = await queryOne<{ id: string }>("SELECT id FROM memberships WHERE customer_id=? AND active=1", invoice.customer_id);
+          const membership = await queryOne<{ id: string }>(`SELECT id FROM memberships WHERE customer_id='${invoice.customer_id}' AND active=1`);
           if (membership) {
             const points = Math.floor(invoice.total_amount / 10000);
             await db.batch([
