@@ -216,7 +216,7 @@ export function responseError(error: unknown) {
   return Response.json({ error: "Hệ thống đang bận. Vui lòng thử lại." }, { status: 500 });
 }
 
-export async function activeHourlyRate(tableId: string, at = new Date()) {
+export async function activeHourlyRate(tableId: string, tenantId: string, at = new Date()) {
   const table = await queryOne<{ table_type_id: string; base_hourly_rate: number }>(`
     SELECT bt.table_type_id, tt.base_hourly_rate FROM billiard_tables bt JOIN table_types tt ON tt.id = bt.table_type_id WHERE bt.id = ? AND bt.active = 1
   `, tableId);
