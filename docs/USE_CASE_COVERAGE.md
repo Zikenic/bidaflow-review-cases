@@ -28,3 +28,4 @@
 - Ưu đãi hội viên được ghi thành dòng điều chỉnh có truy vết.
 - Thanh toán tiền mặt yêu cầu ca thu ngân đang mở.
 - Nhật ký nghiệp vụ chỉ cho đọc, không có API sửa/xóa.
+- Giới hạn kết quả nhật ký kiểm toán (audit logs) tối đa 250 bản ghi khi hiển thị (app/api/app/route.ts).
