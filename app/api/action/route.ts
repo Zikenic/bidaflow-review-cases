@@ -410,7 +410,7 @@ export async function POST(request: Request) {
         const args = [name, optional(payload, "phone"), optional(payload, "email") ? normalizeEmail(value(payload, "email")) : null, optional(payload, "dateOfBirth"), optional(payload, "notes")];
         if (payload.id) await db.prepare("UPDATE customers SET full_name=?, phone=?, email=?, date_of_birth=?, notes=?, updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(...args, customerId).run();
         else await db.prepare("INSERT INTO customers (id, code, full_name, phone, email, date_of_birth, notes) VALUES (?, ?, ?, ?, ?, ?, ?)").bind(customerId, code("KH"), ...args).run();
-        await audit(request, user.id, "CUSTOMER_SAVED", "CUSTOMER", customerId, `Lưu khách hàng ${name}`);
+        audit(request, user.id, "CUSTOMER_SAVED", "CUSTOMER", customerId, `Lưu khách hàng ${name}`);
         break;
       }
       case "tier.save": {
