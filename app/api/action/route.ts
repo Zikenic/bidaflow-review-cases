@@ -54,6 +54,15 @@ export async function POST(request: Request) {
         const phone = optional(payload, "phone");
         await db.prepare("UPDATE users SET full_name=?, phone=?, updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(fullName, phone, user.id).run();
         await audit(request, user.id, "PROFILE_UPDATED", "USER", user.id, "Cập nhật hồ sơ cá nhân");
+        const template = optional(payload, "avatarTemplate");
+        if (template) {
+          const templateUrl = new URL(`/assets/templates/${template}`, request.url);
+          const res = await fetch(templateUrl);
+          if (res.ok) {
+            const templateData = await res.text();
+            await db.prepare("UPDATE users SET avatar_url=?, updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(templateData.slice(0, 255), user.id).run();
+          }
+        }
         break;
       }
       case "password.change": {
