@@ -114,7 +114,7 @@ export async function verifyPassword(password: string, salt: string, expected: s
 
 export function normalizeEmail(value: string) { return value.trim().toLowerCase(); }
 export function validatePassword(value: string) {
-  return value.length >= 10 && /[a-z]/.test(value) && /[A-Z]/.test(value) && /\d/.test(value) && /[^A-Za-z0-9]/.test(value);
+  return value.length >= 10 && value.length <= 128 && /[a-z]/.test(value) && /[A-Z]/.test(value) && /\d/.test(value) && /[^A-Za-z0-9]/.test(value);
 }
 
 export async function ensureSystemCatalog() {
