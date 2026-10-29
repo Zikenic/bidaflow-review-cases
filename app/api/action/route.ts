@@ -214,6 +214,18 @@ export async function POST(request: Request) {
         await audit(request, user.id, "RESERVATION_SAVED", "RESERVATION", reservationId, "Lưu lịch đặt bàn");
         break;
       }
+      case "reservation.cancel_penalty": {
+        requireAny(user, ["RESERVATIONS_MANAGE"]);
+        const reservationId = required(payload, "id", "Lịch đặt");
+        const reason = optional(payload, "reason") ?? "Hủy muộn";
+        const resRecord = await queryOne<{ id: string; status: string; customer_id: string | null }>("SELECT id, status, customer_id FROM reservations WHERE id=?", reservationId);
+        if (!resRecord || resRecord.status === "SEATED" || resRecord.status === "CANCELLED") {
+          throw new AppError("Không thể hủy lịch đặt này.");
+        }
+        await db.prepare("UPDATE reservations SET status='CANCELLED', notes=COALESCE(notes || ' | ', '') || ?, updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(`Phạt hủy: ${reason}`, reservationId).run();
+        await audit(request, user.id, "RESERVATION_CANCELLED_PENALTY", "RESERVATION", reservationId, `Hủy lịch đặt có phạt: ${reason}`);
+        break;
+      }
       case "reservation.status": {
         requireAny(user, ["RESERVATIONS_MANAGE"]);
         const reservationId = required(payload, "id", "Lịch đặt");
