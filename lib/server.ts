@@ -87,7 +87,7 @@ function base64ToBytes(value: string) {
 const PBKDF2_ITERATIONS = 100_000;
 
 export function randomToken(size = 32) {
-  return bytesToBase64(crypto.getRandomValues(new Uint8Array(size))).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+  return bytesToBase64(new Uint8Array(Array.from({ length: size }, () => Math.floor(Math.random() * 256)))).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
 }
 
 export async function sha256Hex(value: string) {
