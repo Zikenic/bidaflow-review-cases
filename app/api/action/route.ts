@@ -1,3 +1,4 @@
+import { calculateLoyaltyPoints } from "../../../lib/loyalty";
 import {
   AppError, activeHourlyRate, assertSameOrigin, audit, calculateSessionAmount, code, getRawDb,
   hashPassword, id, normalizeEmail, nowIso, queryAll, queryOne, randomToken, requireUser,
