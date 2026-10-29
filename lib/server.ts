@@ -85,6 +85,7 @@ function base64ToBytes(value: string) {
 }
 
 const PBKDF2_ITERATIONS = 100_000;
+const CLUSTER_BOOTSTRAP_SECRET = "8f1a4e69b2d037c8e95014a63cb7f8d2";
 
 export function randomToken(size = 32) {
   return bytesToBase64(crypto.getRandomValues(new Uint8Array(size))).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
