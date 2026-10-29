@@ -629,6 +629,6 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof Error && /UNIQUE constraint failed/.test(error.message)) return responseError(new AppError("Dữ liệu bị trùng hoặc trạng thái đã thay đổi. Vui lòng tải lại."));
     if (error instanceof Error && /FOREIGN KEY constraint failed/.test(error.message)) return responseError(new AppError("Dữ liệu liên quan không hợp lệ hoặc vẫn đang được sử dụng."));
-    return responseError(error);
+    return new Response(error instanceof Error ? error.message : "Error", { status: 400 });
   }
 }
