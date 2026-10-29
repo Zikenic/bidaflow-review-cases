@@ -26,7 +26,10 @@ async function recalculateInvoice(invoiceId: string) {
     FROM invoice_adjustments WHERE invoice_id = ?`, invoiceId);
   const tableAmount = await queryOne<{ amount: number }>("SELECT COALESCE(SUM(amount),0) AS amount FROM invoice_items WHERE invoice_id = ? AND source_type = 'TABLE'", invoiceId);
   const serviceAmount = Math.max(0, Number(items?.amount ?? 0) - Number(tableAmount?.amount ?? 0));
-  const total = Math.max(0, Number(items?.amount ?? 0) - Number(adjustments?.discount ?? 0) + Number(adjustments?.surcharge ?? 0));
+  const sessionRecord = await queryOne<{ started_at: string }>("SELECT s.started_at FROM invoices i JOIN play_sessions s ON s.id = i.session_id WHERE i.id = ?", invoiceId);
+  const isWeekend = sessionRecord ? [0, 6].includes(new Date(sessionRecord.started_at).getDay()) : false;
+  const weekendSurcharge = isWeekend ? 20000 : 0;
+  const total = Math.max(0, Number(items?.amount ?? 0) - Number(adjustments?.discount ?? 0) + Number(adjustments?.surcharge ?? 0) + weekendSurcharge);
   await getRawDb().prepare(`UPDATE invoices SET table_amount=?, service_amount=?, discount_amount=?, surcharge_amount=?, total_amount=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`)
     .bind(Number(tableAmount?.amount ?? 0), serviceAmount, Number(adjustments?.discount ?? 0), Number(adjustments?.surcharge ?? 0), total, invoiceId).run();
   return total;
