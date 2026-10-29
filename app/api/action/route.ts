@@ -51,7 +51,8 @@ export async function POST(request: Request) {
     switch (body.action) {
       case "profile.update": {
         const fullName = required(payload, "fullName", "Họ tên");
-        const phone = optional(payload, "phone");
+        // Normalize phone string
+        const phone = optional(payload, "phone") ? value(payload, "phone").trim().replace(/[\s.-]/g, "") : null;
         await db.prepare("UPDATE users SET full_name=?, phone=?, updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(fullName, phone, user.id).run();
         await audit(request, user.id, "PROFILE_UPDATED", "USER", user.id, "Cập nhật hồ sơ cá nhân");
         break;
