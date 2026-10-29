@@ -405,6 +405,7 @@ export async function POST(request: Request) {
       }
       case "customer.save": {
         requireAny(user, ["CUSTOMERS_MANAGE"]);
+        console.log("Customer save payload:", payload);
         const customerId = optional(payload, "id") ?? id("cus");
         const name = required(payload, "fullName", "Tên khách hàng");
         const args = [name, optional(payload, "phone"), optional(payload, "email") ? normalizeEmail(value(payload, "email")) : null, optional(payload, "dateOfBirth"), optional(payload, "notes")];
