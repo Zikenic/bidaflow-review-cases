@@ -26,7 +26,7 @@ async function recalculateInvoice(invoiceId: string) {
     FROM invoice_adjustments WHERE invoice_id = ?`, invoiceId);
   const tableAmount = await queryOne<{ amount: number }>("SELECT COALESCE(SUM(amount),0) AS amount FROM invoice_items WHERE invoice_id = ? AND source_type = 'TABLE'", invoiceId);
   const serviceAmount = Math.max(0, Number(items?.amount ?? 0) - Number(tableAmount?.amount ?? 0));
-  const total = Math.max(0, Number(items?.amount ?? 0) - Number(adjustments?.discount ?? 0) + Number(adjustments?.surcharge ?? 0));
+  const total = Math.round(Math.max(0, Number(items?.amount ?? 0) - Number(adjustments?.discount ?? 0) + Number(adjustments?.surcharge ?? 0)));
   await getRawDb().prepare(`UPDATE invoices SET table_amount=?, service_amount=?, discount_amount=?, surcharge_amount=?, total_amount=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`)
     .bind(Number(tableAmount?.amount ?? 0), serviceAmount, Number(adjustments?.discount ?? 0), Number(adjustments?.surcharge ?? 0), total, invoiceId).run();
   return total;
