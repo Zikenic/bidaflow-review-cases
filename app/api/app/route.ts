@@ -52,7 +52,7 @@ export async function GET(request: Request) {
       canAdmin ? queryAll("SELECT * FROM roles ORDER BY name") : [],
       allowed(user, "ROLES_MANAGE") ? queryAll(`SELECT p.id, p.code, p.name, p.module, rp.role_id
         FROM permissions p LEFT JOIN role_permissions rp ON rp.permission_id = p.id ORDER BY p.module, p.name`) : [],
-      allowed(user, "AUDIT_VIEW") ? queryAll(`SELECT al.*, u.full_name AS actor_name FROM audit_logs al LEFT JOIN users u ON u.id = al.actor_id ORDER BY al.created_at DESC LIMIT 250`) : [],
+      allowed(user, "AUDIT_VIEW") ? queryAll(`SELECT al.*, u.full_name AS actor_name FROM audit_logs al LEFT JOIN users u ON u.id = al.actor_id ORDER BY al.created_at DESC`) : [],
     ]);
 
     const enrichedSessions = await Promise.all((sessions as Array<Record<string, unknown>>).map(async (session) => ({
